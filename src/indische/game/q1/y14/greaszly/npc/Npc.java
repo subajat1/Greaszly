@@ -1,4 +1,4 @@
-package npc;
+package indische.game.q1.y14.greaszly.npc;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
@@ -10,20 +10,34 @@ public class Npc {
 	private Texture npc_tex;
 	private Rectangle npc_rec;
 	private float npc_scale;
-
-	public void create() {
+	private int npc_speed;
+	
+	public Npc(){
 		npc_tex = new Texture(Gdx.files.internal("npc/fries.png"));
 		npc_tex.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-		npc_scale = 0.4f;
-		npc_rec = new Rectangle(100, 100, npc_tex.getWidth() * npc_scale,
+		npc_scale = .35f;
+		npc_rec = new Rectangle(1600, 128, npc_tex.getWidth() * npc_scale,
 				npc_tex.getHeight() * npc_scale);
+		npc_speed = 4;
 	}
 
+	public void create() {
+		
+	}	
+
+	public void setNpc_rec(Rectangle npc_rec) {
+		this.npc_rec = npc_rec;
+	}
+	
 	public void dispose() {
 
 	}
 
 	public void update(float stateTime) {
+		npc_rec.x -= npc_speed;
+		
+		if(npc_rec.x < -1 * Gdx.graphics.getWidth())
+			npc_rec.x = Gdx.graphics.getWidth();
 
 	}
 
