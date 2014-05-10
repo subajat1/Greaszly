@@ -13,7 +13,18 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.TimeUtils;
 
 public class Karakter {
-	Platform platform;
+
+	public static float stamina;
+	public static int stamina_BoingVar;
+	public static float stamina_OrganVar;
+	public static int stamina_positionBuffer;
+	
+	public static float grease;
+	
+	public static int originPosition;
+
+	private Hud hud;
+	private Platform platform;
 
 	private Texture karakter_tex, dummy_tex;
 	private Rectangle karakter_rec, dummy_rec;
@@ -34,9 +45,23 @@ public class Karakter {
 	public Rectangle tangKanan_rec, tangKiri_rec, kakiKanan_rec, kakiKiri_rec;
 
 	public void create() {
+		// Stats
+		Karakter.stamina = 100;
+		Karakter.stamina_BoingVar = 250;
+		Karakter.stamina_OrganVar = 1;
+		Karakter.stamina_positionBuffer = 0;
+		
+		Karakter.grease = 500;
+
+		
 		platform = new Platform();
 		platform.create();
 
+		hud = new Hud();
+		hud.create();
+		hud.setPlatfrom(platform);
+
+		
 		dummy_tex = new Texture(Gdx.files.internal("mockup/ingame.png"));
 		dummy_tex.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 		dummy_rec = new Rectangle(0, 0, dummy_tex.getWidth(), 600);
@@ -74,6 +99,86 @@ public class Karakter {
 		kakiKiri_rec = new Rectangle(karakter_rec.x + 40, karakter_rec.y - 54,
 				tangKanan_tex.getWidth() / 4 * limbs_scale,
 				tangKanan_tex.getHeight() / 5 * limbs_scale);
+	}
+
+	public void dispose() {
+		karakter_tex.dispose();
+		karakter_rec = null;
+
+		platform.dispose();
+	}
+
+	public void update() {
+		stateTime = TimeUtils.millis() % 1000;
+		boingBoingVar = stateTime / Karakter.stamina_BoingVar;
+		organVar += Gdx.graphics.getDeltaTime() / Karakter.stamina_OrganVar;		
+		
+		hud.update(stateTime);
+		hud.updateStaminaHud();
+		hud.updateGreaseHud();
+
+		platform.update(stateTime);
+		
+		karakter_rec.x += stamina_positionBuffer;
+		tangKanan_rec.x += stamina_positionBuffer;
+		tangKiri_rec.x += stamina_positionBuffer;
+		kakiKanan_rec.x += stamina_positionBuffer;
+		kakiKiri_rec.x += stamina_positionBuffer;
+		face_e_rec.x += stamina_positionBuffer;
+		
+		if (karakter_rec.x <= 70) {
+
+			stamina_positionBuffer = 0;
+			karakter_rec.x = 70;
+			tangKanan_rec.x = karakter_rec.x - 48;
+			tangKiri_rec.x = karakter_rec.x + 94;
+			kakiKanan_rec.x = karakter_rec.x - 10;
+			kakiKiri_rec.x = karakter_rec.x + 40;
+			face_e_rec.x = karakter_rec.x + (karakter_rec.width / 2) - 10;
+		}
+		
+		originPosition = (int) (this.karakter_rec.x + this.karakter_rec.width);
+	}
+
+	public void draw(SpriteBatch batch) {
+		batch.begin();
+
+		if (MyGdxGame.debug)
+			batch.draw(dummy_tex, dummy_rec.x, dummy_rec.y, dummy_rec.width,
+					dummy_rec.height);
+
+		platform.draw(batch);
+
+		tangKiri_frac = tangKiri_ani.getKeyFrame(organVar, true);
+		batch.draw(tangKiri_frac, tangKiri_rec.x, tangKiri_rec.y,
+				tangKiri_rec.width, tangKiri_rec.height);
+
+		kakiKiri_frac = kakiKiri_ani.getKeyFrame(organVar, true);
+		batch.draw(kakiKiri_frac, kakiKiri_rec.x, kakiKiri_rec.y,
+				kakiKiri_rec.width, kakiKiri_rec.height);
+
+		// <body>
+		float boing = (float) (1 - Math.sin(boingBoingVar * Math.PI));
+		if (boing < 0)
+			boing *= -1;
+		batch.draw(karakter_tex, karakter_rec.x, karakter_rec.y,
+				karakter_rec.width, karakter_rec.height - ((float) (boing * 8)));
+
+		// <face>
+		batch.draw(face_e_neut_tex, face_e_rec.x, face_e_rec.y
+				- ((float) (boing * 8)), face_e_rec.width, face_e_rec.height);
+
+		tangKanan_frac = tangKanan_ani.getKeyFrame(organVar, true);
+		batch.draw(tangKanan_frac, tangKanan_rec.x, tangKanan_rec.y,
+				tangKanan_rec.width, tangKanan_rec.height);
+
+		kakiKanan_frac = kakiKanan_ani.getKeyFrame(organVar, true);
+		batch.draw(kakiKanan_frac, kakiKanan_rec.x, kakiKanan_rec.y,
+				kakiKanan_rec.width, kakiKanan_rec.height);
+
+		hud.draw(batch);
+
+		batch.end();
 	}
 
 	private void createKarakterBodyAnimation() {
@@ -138,62 +243,5 @@ public class Karakter {
 			}
 		}
 		kakiKiri_ani = new Animation(animationVar, kakiKiri_fra);
-	}
-
-	public void dispose() {
-		karakter_tex.dispose();
-		karakter_rec = null;
-
-		platform.dispose();
-	}
-
-	public void update() {
-		stateTime = TimeUtils.millis() % 1000;
-		// stateTime += Gdx.graphics.getDeltaTime();
-		boingBoingVar = stateTime / 250;
-		organVar += Gdx.graphics.getDeltaTime();
-
-		platform.update(stateTime);
-
-	}
-
-	public void draw(SpriteBatch batch) {
-		batch.begin();
-
-		
-		if (MyGdxGame.debug)
-			batch.draw(dummy_tex, dummy_rec.x, dummy_rec.y, dummy_rec.width,
-					dummy_rec.height);
-
-		platform.draw(batch);
-
-		tangKiri_frac = tangKiri_ani.getKeyFrame(organVar, true);
-		batch.draw(tangKiri_frac, tangKiri_rec.x, tangKiri_rec.y,
-				tangKiri_rec.width, tangKiri_rec.height);
-
-		kakiKiri_frac = kakiKiri_ani.getKeyFrame(organVar, true);
-		batch.draw(kakiKiri_frac, kakiKiri_rec.x, kakiKiri_rec.y,
-				kakiKiri_rec.width, kakiKiri_rec.height);
-
-		// <body>
-		float boing = (float) (1 - Math.sin(boingBoingVar * Math.PI));
-		if (boing < 0)
-			boing *= -1;
-		batch.draw(karakter_tex, karakter_rec.x, karakter_rec.y,
-				karakter_rec.width, karakter_rec.height - ((float) (boing * 8)));
-
-		// <face>
-		batch.draw(face_e_neut_tex, face_e_rec.x, face_e_rec.y
-				- ((float) (boing * 8)), face_e_rec.width, face_e_rec.height);
-
-		tangKanan_frac = tangKanan_ani.getKeyFrame(organVar, true);
-		batch.draw(tangKanan_frac, tangKanan_rec.x, tangKanan_rec.y,
-				tangKanan_rec.width, tangKanan_rec.height);
-
-		kakiKanan_frac = kakiKanan_ani.getKeyFrame(organVar, true);
-		batch.draw(kakiKanan_frac, kakiKanan_rec.x, kakiKanan_rec.y,
-				kakiKanan_rec.width, kakiKanan_rec.height);
-
-		batch.end();
 	}
 }
